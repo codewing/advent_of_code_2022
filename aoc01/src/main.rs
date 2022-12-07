@@ -1,4 +1,4 @@
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Seek, SeekFrom};
 use std::fs::File;
 use clap_v3::{App, Arg};
 
@@ -17,8 +17,15 @@ fn main() {
         .get_matches();
 
     let file_path = matches.value_of("file").unwrap();
-    let file = File::open(file_path).expect("Couldn't open passed file.");
+    let mut file = File::open(file_path).expect("Couldn't open passed file.");
 
+    assignment_1_calculate_best_elf(&file);
+
+    file.seek(SeekFrom::Start(0)).unwrap();
+    assignment_2_calculate_best_elves(&file);
+}
+
+fn assignment_1_calculate_best_elf (file: &File) {
     let mut current_elf = Elf { index: 0, calories: 0};
     let mut best_elf = Elf { index: 0, calories: 0};
     let buffer = BufReader::new(file);
@@ -35,4 +42,24 @@ fn main() {
     }
 
     println!("Best Elf #{} with {} calories.", best_elf.index, best_elf.calories);
+}
+
+fn assignment_2_calculate_best_elves (file: &File) {
+    let buffer = BufReader::new(file);
+    let lines = buffer.lines().map(|l| l.unwrap());
+    let mut elves = lines.fold(vec![Elf{index: 0, calories: 0}], |mut elements, current| {
+        if current.is_empty() {
+            elements.push(Elf {index: elements.len() as i32, calories: 0})
+        } else {
+            if let Some(last) = elements.last_mut() {
+                last.calories += current.parse::<i32>().unwrap();
+            }
+        }
+        elements
+    });
+    elves.sort_by(|elf1, elf2| { elf2.calories.cmp(&elf1.calories)});
+
+    let calories_total = elves.iter().take(3).fold(0, |acc, elf| acc + elf.calories);
+
+    println!("Top 3 Elves carry {} calories.", calories_total);
 }
