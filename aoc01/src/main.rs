@@ -1,6 +1,6 @@
 use std::io::{BufRead, BufReader, Seek, SeekFrom};
 use std::fs::File;
-use clap_v3::{App, Arg};
+use clap::{Parser};
 
 #[derive(Clone, Copy)]
 struct Elf {
@@ -8,16 +8,17 @@ struct Elf {
     calories: i32
 }
 
-fn main() {
-    let matches = App::new("myapp")
-        .version("1.0")
-        .author("Frieder Baumann. <codewing@web.de>")
-        .about("Advent of Code - Day 1")
-            .arg(Arg::with_name("file").short('f').long("file").value_name("FILE").required(true).takes_value(true).help("Path to the input file"))
-        .get_matches();
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    #[arg(short, long)]
+    file_path: String,
+}
 
-    let file_path = matches.value_of("file").unwrap();
-    let mut file = File::open(file_path).expect("Couldn't open passed file.");
+fn main() {
+    let args = Args::parse();
+
+    let mut file = File::open(args.file_path).expect("Couldn't open passed file.");
 
     assignment_1_calculate_best_elf(&file);
 
